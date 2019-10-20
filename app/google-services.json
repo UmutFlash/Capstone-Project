@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "815625142140",
+    "firebase_url": "https://openactivity-7c70c.firebaseio.com",
+    "project_id": "openactivity-7c70c",
+    "storage_bucket": "openactivity-7c70c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815625142140:android:e4d40ba919b755b7212ef9",
+        "android_client_info": {
+          "package_name": "com.umutflash.openactivity"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815625142140-j9j8fn7tr0dnjcv25fgbr99bdavb56cu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.umutflash.openactivity",
+            "certificate_hash": "3e50db498ef2d938d341ba358b5f7334ed0e0b70"
+          }
+        },
+        {
+          "client_id": "815625142140-0c8ab1ubgvkptoaidasvs2fo71enpjvc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.umutflash.openactivity",
+            "certificate_hash": "9487d1fe5504e4f60824c6156f3be167f71cda0f"
+          }
+        },
+        {
+          "client_id": "815625142140-oursqu9p5l9hln9epnrd4h7frm9sbj30.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiXxV_lKRoXSQvtsnz0ZnBDhJ4dn_IDQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "815625142140-oursqu9p5l9hln9epnrd4h7frm9sbj30.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
