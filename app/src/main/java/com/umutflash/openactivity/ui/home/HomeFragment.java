@@ -74,13 +74,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private Map<String, Object> dataModel;
 
 
-    public static final String ARG_SPOT_ID = "spotId";
-    public static final String ARG_TITLE = "title";
-    public static final String ARG_CATEGORY = "category";
-    public static final String ARG_DESCRIPTION = "description";
-    public static final String ARG_IMAGE_URL = "imageUrl";
-    public static final String ARG_LATITUDE = "latitude";
-    public static final String ARG_LONITUDE = "longitude";
+    private static final String ARG_SPOT_ID = "spotId";
+    private static final String ARG_TITLE = "title";
+    private static final String ARG_CATEGORY = "category";
+    private static final String ARG_DESCRIPTION = "description";
+    private static final String ARG_IMAGE_URL = "imageUrl";
+    private static final String ARG_LATITUDE = "latitude";
+    private static final String ARG_LONITUDE = "longitude";
+
+    private Boolean startFlag = false;
+
     private HomeViewModel homeViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -96,6 +99,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 textView.setText(s);
             }
         });
+
+        if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            checkLocationPermission();
+        }
 
         ButterKnife.bind(this, root);
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
@@ -120,18 +128,15 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
 
         mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(1000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
 
-        if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            checkLocationPermission();
-        }
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-        mMap.setMyLocationEnabled(true);
+
 
         fetchSpots();
 
@@ -236,7 +241,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 if (getContext() != null) {
                     mLocation = location;
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                    if(!startFlag){
+                       mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                        startFlag = true;
+                    }
                 }
             }
         }
