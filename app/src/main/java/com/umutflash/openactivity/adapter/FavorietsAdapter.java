@@ -1,32 +1,36 @@
 package com.umutflash.openactivity.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.squareup.picasso.Picasso;
+import com.umutflash.openactivity.DetailViewActivity;
 import com.umutflash.openactivity.R;
-import com.umutflash.openactivity.data.SpotInformation;
+import com.umutflash.openactivity.data.model.Spot;
 
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class FavorietsAdapter extends RecyclerView.Adapter<FavorietsAdapter.ViewHolder>{
+public class FavorietsAdapter extends RecyclerView.Adapter<FavorietsAdapter.ViewHolder> {
 
     private LayoutInflater mInflater;
     private Context mContext;
-    private List<SpotInformation> mSpotInformationList;
+    private Spot[] mSpotsList;
 
-    public FavorietsAdapter(Context context, List<SpotInformation> spots) {
+    public static final String ARG_Spot = "spot";
+
+    public FavorietsAdapter(Context context, Spot [] spots) {
         this.mInflater = LayoutInflater.from(context);
         mContext = context;
-        mSpotInformationList = spots;
+        mSpotsList = spots;
     }
 
     @NonNull
@@ -39,27 +43,41 @@ public class FavorietsAdapter extends RecyclerView.Adapter<FavorietsAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        SpotInformation spotCurrent = mSpotInformationList.get(position);
+        Spot spotCurrent = mSpotsList[position];
         holder.mTitle.setText(spotCurrent.getTitle());
+        holder.mCategory.setText(spotCurrent.getCategory());
+        Uri imageFilePath = Uri.parse(spotCurrent.getImageUrl());
         Picasso.get()
-                .load(spotCurrent.getImageUrl())
+                .load(imageFilePath)
                 .into(holder.mImageView);
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Context context = v.getContext();
+                Intent intent = new Intent(context, DetailViewActivity.class);
+                intent.putExtra(ARG_Spot, spotCurrent);
+                context.startActivity(intent);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return mSpotInformationList.size();
+        return mSpotsList.length;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         final View mView;
         final TextView mTitle;
+        final TextView mCategory;
         ImageView mImageView;
 
         ViewHolder(View view) {
             super(view);
             mView = view;
             mTitle = view.findViewById(R.id.title);
+            mCategory = view.findViewById(R.id.category);
             mImageView = view.findViewById(R.id.picView);
         }
 

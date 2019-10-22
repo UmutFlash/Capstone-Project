@@ -17,4 +17,11 @@
     <string name="don_t_have_an_account_sign_up">Don’t have an account? <b>Sign up</b></string>
     <string name="no_network">Wait for network....</string>
     <string name="title_activity_add_spot">AddSpotActivity</string>
+    <string name="title_activity_detail_view">DetailViewActivity</string>
+    <string name="no_favorites_available">No favorites available.</string>
+    <string name="title_favorites">Favorites</string>
+    <string name="title_profile">Profile</string>
+    <string name="error_image">Error image</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 </resources>

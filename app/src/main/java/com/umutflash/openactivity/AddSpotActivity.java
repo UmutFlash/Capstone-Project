@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -20,21 +21,23 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
+import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
-import com.umutflash.openactivity.data.SpotInformation;
+import com.umutflash.openactivity.data.model.Spot;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -62,8 +65,6 @@ public class AddSpotActivity extends AppCompatActivity {
     EditText descriptionEditeText;
     @BindView(R.id.imageView)
     ImageView imageView;
-    @BindView(R.id.take_image)
-    Button takeImageBtn;
     @BindView(R.id.upload)
     Button uploadBtn;
     @BindView(R.id.progressBar)
@@ -78,6 +79,9 @@ public class AddSpotActivity extends AppCompatActivity {
 
     private StorageReference mStorageReference;
     private DatabaseReference mDatabaseReference;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser mUser;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +91,19 @@ public class AddSpotActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         ButterKnife.bind(this);
         Bundle extras = getIntent().getExtras();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setTitle("Home");
+        getSupportActionBar().setSubtitle("sairam");
         if (extras != null) {
             mLatitude = extras.getDouble("latitude");
             mLongitude = extras.getDouble("longitude");
 
         }
+
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        mUser = firebaseAuth.getCurrentUser();
 
         mStorageReference = FirebaseStorage.getInstance().getReference("spots");
         mDatabaseReference = FirebaseDatabase.getInstance().getReference("spots");
@@ -106,14 +118,6 @@ public class AddSpotActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        takeImageBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
                 captureFromCamera();
             }
         });
@@ -126,11 +130,94 @@ public class AddSpotActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
     private void uploadFile() {
         View contextView = findViewById(android.R.id.content);
         if (imageFilePath != null) {
-            StorageReference fileReference = mStorageReference.child(System.currentTimeMillis() + "." + getFileExtensions(imageFilePath));
+            StorageReference fileReference = mStorageReference.child(System.currentTimeMillis() + ".jpeg");
 
+
+            StorageTask<UploadTask.TaskSnapshot> uploadTask = fileReference.putFile(imageFilePath);
+
+            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                @Override
+                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                    if (!task.isSuccessful()) {
+                        throw task.getException();
+                    }
+
+                    // Continue with the task to get the download URL
+                    return fileReference.getDownloadUrl();
+                }
+            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                @Override
+                public void onComplete(@NonNull Task<Uri> task) {
+                    if (task.isSuccessful()) {
+                        Uri downloadUri = task.getResult();
+                        String downloadURL = downloadUri.toString();
+
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressBar.setProgress(0);
+                            }
+                        }, 5000);
+
+                        Snackbar.make(contextView, "Upload Image successful", Snackbar.LENGTH_LONG)
+                                .show();
+
+                        String spotId = mDatabaseReference.push().getKey();
+                        Spot spot = new Spot(spotId,
+                                mUser.getUid(),
+                                titleEditeText.getText().toString().trim(),
+                                categoryEditeText.getText().toString().trim(),
+                                descriptionEditeText.getText().toString().trim(),
+                                downloadURL,
+                                mLatitude,
+                                mLongitude);
+
+
+                        mDatabaseReference.child(spotId).setValue(spot)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Snackbar.make(contextView, "Upload Data successful", Snackbar.LENGTH_LONG)
+                                                .show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Snackbar.make(contextView, e.getMessage(), Snackbar.LENGTH_LONG)
+                                                .setAction("Action", null).show();
+
+                                    }
+                                });
+                    } else {
+                        Snackbar.make(contextView, "FEHLER", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null).show();
+                    }
+                }
+            });
+
+            /*
             fileReference.putFile(imageFilePath)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
@@ -143,21 +230,28 @@ public class AddSpotActivity extends AppCompatActivity {
                                 }
                             }, 5000);
 
-                            Snackbar.make(contextView, "Upload successful", Snackbar.LENGTH_LONG)
-                                    .setAction("Action", null).show();
+                            Snackbar.make(contextView, "Upload Image successful", Snackbar.LENGTH_LONG)
+                                    .show();
 
-                            SpotInformation spotInformation = new SpotInformation("",
+                            String spotId = mDatabaseReference.push().getKey();
+                            Spot spot = new Spot(spotId,
+                                    mUser.getUid(),
                                     titleEditeText.getText().toString().trim(),
                                     categoryEditeText.getText().toString().trim(),
                                     descriptionEditeText.getText().toString().trim(),
-                                    taskSnapshot.getStorage().getDownloadUrl().toString(),
+                                    taskSnapshot.getUploadSessionUri().toString(),
                                     mLatitude,
                                     mLongitude);
 
-                            String spotId = mDatabaseReference.push().getKey();
 
-
-                            mDatabaseReference.child(spotId).setValue(spotInformation)
+                            mDatabaseReference.child(spotId).setValue(spot)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Snackbar.make(contextView, "Upload Data successful", Snackbar.LENGTH_LONG)
+                                                    .show();
+                                        }
+                                    })
                                     .addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
@@ -186,6 +280,8 @@ public class AddSpotActivity extends AppCompatActivity {
 
                         }
                     });
+                    */
+
 
         } else {
             Snackbar.make(contextView, "Not file selected", Snackbar.LENGTH_LONG)

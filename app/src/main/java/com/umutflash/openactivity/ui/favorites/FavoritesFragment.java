@@ -1,17 +1,17 @@
-package com.umutflash.openactivity;
+package com.umutflash.openactivity.ui.favorites;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.os.Bundle;
 import android.os.Parcelable;
-
-import com.google.firebase.database.DatabaseReference;
-import com.umutflash.openactivity.adapter.FavorietsAdapter;
-import com.umutflash.openactivity.data.model.Spot;
-import com.umutflash.openactivity.data.model.SpotEntry;
-
-import java.util.List;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,23 +19,45 @@ import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class FavorietsActivity extends AppCompatActivity {
+import com.google.firebase.database.DatabaseReference;
+import com.umutflash.openactivity.AppWidget;
+import com.umutflash.openactivity.R;
+import com.umutflash.openactivity.adapter.FavorietsAdapter;
+import com.umutflash.openactivity.data.model.Spot;
+import com.umutflash.openactivity.data.model.SpotEntry;
+
+import java.util.List;
+
+public class FavoritesFragment extends Fragment {
+
+    private FavoritesViewModel favorietsViewModel;
 
     @BindView(R.id.favorietsList)
     RecyclerView favorietRecyclerView;
+
+    @BindView(R.id.no_favorites_layout)
+    LinearLayout mNoFavoritesLayout;
+
     private FavorietsAdapter mAdapter;
     private DatabaseReference mDataRef;
     private List<SpotEntry> favoriets;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_favorites);
-        ButterKnife.bind(this);
 
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        favorietsViewModel =
+                ViewModelProviders.of(this).get(FavoritesViewModel.class);
+        View root = inflater.inflate(R.layout.fragment_favorites, container, false);
+        favorietsViewModel.getText().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@Nullable String s) {
+                //textView.setText(s);
+            }
+        });
+        ButterKnife.bind(this, root);
 
         favorietRecyclerView.setHasFixedSize(true);
-        favorietRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        favorietRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         getFavorites();
 
@@ -49,49 +71,30 @@ public class FavorietsActivity extends AppCompatActivity {
                 for (int i = 0; i < parcelableSpots.length; i++) {
                     spotCollection[i] = (Spot) parcelableSpots[i];
                 }
-                favorietRecyclerView.setAdapter(new FavorietsAdapter(getApplicationContext(), spotCollection));
+                favorietRecyclerView.setAdapter(new FavorietsAdapter(getContext(), spotCollection));
             }
         }
 
-
-        /*
-
-        favoriets = new ArrayList<>();
-        mDataRef = FirebaseDatabase.getInstance().getReference("spots");
-
-        mDataRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    SpotEntry spot = postSnapshot.getValue(SpotEntry.class);
-                    favoriets.add(spot);
-
-                }
-                mAdapter = new FavorietsAdapter(FavorietsActivity.this, favoriets);
-
-                favorietRecyclerView.setAdapter(mAdapter);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-         */
-
+        return root;
     }
 
+
     private void getFavorites() {
-        FavoritesViewModel mainViewModel = ViewModelProviders.of(this).get(FavoritesViewModel.class);
+        com.umutflash.openactivity.FavoritesViewModel mainViewModel = ViewModelProviders.of(this).get(com.umutflash.openactivity.FavoritesViewModel.class);
         mainViewModel.getFavorites().observe(this, new Observer<List<SpotEntry>>() {
             @Override
             public void onChanged(@Nullable List<SpotEntry> favoritesEntries) {
                 Spot[] favorites = parseMovieArray(favoritesEntries);
                 if (favoritesEntries != null && !favoritesEntries.isEmpty()) {
-                    favorietRecyclerView.setAdapter(new FavorietsAdapter(FavorietsActivity.this, favorites));
+                    favorietRecyclerView.setAdapter(new FavorietsAdapter(getContext(), favorites));
+                    mNoFavoritesLayout.setVisibility(View.GONE);
+
+                    AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getContext());
+                    int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(getContext(), AppWidget.class));
+                    AppWidget.onUpdateNewAppWidget(getContext(), appWidgetManager, favorites, appWidgetIds);
                 } else {
                     favorietRecyclerView.setAdapter(null);
+                    mNoFavoritesLayout.setVisibility(View.VISIBLE);
                 }
             }
         });

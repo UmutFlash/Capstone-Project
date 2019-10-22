@@ -54,11 +54,9 @@ dependencies {
     implementation 'com.firebase:geofire-java:3.0.0'
 
 
-
     //Butter Knife
     implementation 'com.jakewharton:butterknife:10.2.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.0'
-
 
 
     //Glide
@@ -69,6 +67,13 @@ dependencies {
 
     //Lifecycle components
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
+
+    implementation "android.arch.persistence.room:runtime:2.1.0"
+    annotationProcessor "android.arch.persistence.room:compiler:2.1.0"
+
+    implementation 'com.squareup.retrofit2:retrofit:2.1.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.1.0'
+
 }
 
 apply plugin: 'com.google.gms.google-services'

@@ -21,14 +21,6 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth firebaseAuth;
 
-    @BindView(R.id.profile)
-    Button profileBtn;
-
-    @BindView(R.id.map)
-    Button mapBtn;
-
-    @BindView(R.id.favoriets)
-    Button favorietsBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,29 +36,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(getApplicationContext(), LoginActivity.class));
         }
 
-        profileBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
-                finish();
-            }
-        });
-
-        mapBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(), MapsActivity.class));
-                finish();
-            }
-        });
-
-        favorietsBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(), FavorietsActivity.class));
-                finish();
-            }
-        });
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each

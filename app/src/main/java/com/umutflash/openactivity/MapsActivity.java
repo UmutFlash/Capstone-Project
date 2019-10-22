@@ -1,29 +1,16 @@
 package com.umutflash.openactivity;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApi;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.internal.OnConnectionFailedListener;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -42,12 +29,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.umutflash.openactivity.adapter.FavorietsAdapter;
-import com.umutflash.openactivity.data.SpotInformation;
+import com.umutflash.openactivity.data.model.Spot;
+import com.umutflash.openactivity.data.model.SpotEntry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -60,10 +55,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationRequest mLocationRequest;
 
     private DatabaseReference mDataRef;
-    private List<SpotInformation> favoriets;
+    private List<SpotEntry> favoriets;
     private LatLng pickupLocation;
     private Map<Marker, Map<String, Object>> markers;
     private Map<String, Object> dataModel;
+
+
+    public static final String ARG_SPOT_ID = "spotId";
+    public static final String ARG_TITLE = "title";
+    public static final String ARG_CATEGORY = "category";
+    public static final String ARG_DESCRIPTION = "description";
+    public static final String ARG_IMAGE_URL = "imageUrl";
+    public static final String ARG_LATITUDE = "latitude";
+    public static final String ARG_LONITUDE = "longitude";
 
 
     @Override
@@ -84,9 +88,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MapsActivity.this, AddSpotActivity.class);
-                intent.putExtra("latitude",mLocation.getLatitude());
-                intent.putExtra("longitude",mLocation.getLongitude());
+                intent.putExtra("latitude", mLocation.getLatitude());
+                intent.putExtra("longitude", mLocation.getLongitude());
                 startActivity(intent);
+                finish();
             }
         });
 
@@ -101,9 +106,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-        }else{
+        } else {
             checkLocationPermission();
         }
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
@@ -114,8 +119,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Map dataModel = (Map)markers.get(marker);
-                String title = (String)dataModel.get("title");
+                Map dataModel = (Map) markers.get(marker);
+                if (dataModel != null) {
+                    String spotId = (String) dataModel.get(ARG_SPOT_ID);
+                    String title = (String) dataModel.get(ARG_TITLE);
+                    String category = (String) dataModel.get(ARG_CATEGORY);
+                    String description = (String) dataModel.get(ARG_DESCRIPTION);
+                    String imageURL = (String) dataModel.get(ARG_IMAGE_URL);
+                    double latitude = (double) dataModel.get(ARG_LATITUDE);
+                    double longitude = (double) dataModel.get(ARG_LONITUDE);
+
+                    Spot spot = new Spot(spotId, "", title, category, description, imageURL, latitude, longitude);
+                    Intent intent = new Intent(MapsActivity.this, DetailViewActivity.class);
+                    intent.putExtra(FavorietsAdapter.ARG_Spot, spot);
+                    startActivity(intent);
+                    finish();
+                }
+
                 return false;
             }
 
@@ -131,11 +151,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    SpotInformation spot = postSnapshot.getValue(SpotInformation.class);
-                    dataModel.put("title", spot.getTitle());
-                    dataModel.put("catgory", spot.getCategory());
-                    dataModel.put("latitude", spot.getLatitude());
-                    dataModel.put("longitude", spot.getLongitude());
+                    SpotEntry spot = postSnapshot.getValue(SpotEntry.class);
+                    dataModel.put(ARG_SPOT_ID, spot.getSpotId());
+                    dataModel.put(ARG_DESCRIPTION, spot.getDescription());
+                    dataModel.put(ARG_TITLE, spot.getTitle());
+                    dataModel.put(ARG_CATEGORY, spot.getCategory());
+                    dataModel.put(ARG_IMAGE_URL, spot.getImageUrl());
+                    dataModel.put(ARG_LATITUDE, spot.getLatitude());
+                    dataModel.put(ARG_LONITUDE, spot.getLongitude());
                     pickupLocation = new LatLng(spot.getLatitude(), spot.getLongitude());
                     Marker marker = mMap.addMarker(new MarkerOptions().position(pickupLocation).title(spot.getTitle()));
                     markers.put(marker, dataModel);
@@ -151,7 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void checkLocationPermission() {
-        if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
                 new android.app.AlertDialog.Builder(this)
                         .setTitle("give permission")
@@ -164,8 +187,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         })
                         .create()
                         .show();
-            }
-            else{
+            } else {
                 ActivityCompat.requestPermissions(MapsActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             }
         }
@@ -174,14 +196,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch(requestCode){
-            case 1:{
-                if(grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+        switch (requestCode) {
+            case 1: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
                         mMap.setMyLocationEnabled(true);
                     }
-                } else{
+                } else {
                     Toast.makeText(getApplicationContext(), "Please provide the permission", Toast.LENGTH_LONG).show();
                 }
                 break;
@@ -189,7 +211,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    LocationCallback mLocationCallback = new LocationCallback(){
+    LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             for (Location location : locationResult.getLocations()) {
