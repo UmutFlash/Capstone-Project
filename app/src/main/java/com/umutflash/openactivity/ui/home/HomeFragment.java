@@ -44,7 +44,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.umutflash.openactivity.AddSpotActivity;
 import com.umutflash.openactivity.DetailViewActivity;
-import com.umutflash.openactivity.MapsActivity;
 import com.umutflash.openactivity.R;
 import com.umutflash.openactivity.adapter.FavorietsAdapter;
 import com.umutflash.openactivity.data.model.Spot;

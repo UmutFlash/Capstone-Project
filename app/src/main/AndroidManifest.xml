@@ -14,14 +14,10 @@
             android:label="@string/title_activity_detail_view"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <activity android:name=".FavorietsActivity" />
         <activity
             android:name=".AddSpotActivity"
             android:label="@string/title_activity_add_spot"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".MapsActivity"
-            android:label="@string/title_activity_maps" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -31,7 +27,6 @@
              You can define the keys for the debug and release targets in src/debug/ and src/release/.
         -->
         <activity android:name=".BaseActivity" />
-        <activity android:name=".ProfileActivity" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".LoginActivity" />
         <activity
