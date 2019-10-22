@@ -24,6 +24,8 @@ import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -87,7 +89,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
-        final Button addSpotBtn = root.findViewById(R.id.add_spot);
+
         homeViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -115,15 +117,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
 
+
+        mMap = googleMap;
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(1000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
 
         if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
         } else {
             checkLocationPermission();
         }
@@ -232,10 +235,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             for (Location location : locationResult.getLocations()) {
                 if (getContext() != null) {
                     mLocation = location;
-
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
                 }
             }
         }

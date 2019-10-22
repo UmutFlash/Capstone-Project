@@ -24,4 +24,6 @@
     <string name="error_image">Error image</string>
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
+
+    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544~3347511713</string>
 </resources>
