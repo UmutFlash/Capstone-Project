@@ -1,9 +1,7 @@
 package com.umutflash.openactivity;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,7 +9,6 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
-import com.squareup.picasso.Picasso;
 import com.umutflash.openactivity.adapter.FavorietsAdapter;
 import com.umutflash.openactivity.data.AppDatabase;
 import com.umutflash.openactivity.data.model.Spot;
@@ -23,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Retrofit;
 
 public class DetailViewActivity extends AppCompatActivity {
 
@@ -35,13 +31,10 @@ public class DetailViewActivity extends AppCompatActivity {
     TextView descriptionTextView;
     @BindView(R.id.photo)
     ImageView imageView;
-
     @BindView(R.id.collapsing)
     CollapsingToolbarLayout mCollapsingToolbarLayout;
-
     @BindView(R.id.fab)
     FloatingActionButton mFab;
-
 
     private String mId;
     private String mSpotId;
@@ -63,14 +56,15 @@ public class DetailViewActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ButterKnife.bind(this);
+        setSupportActionBar(toolbar);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://openactivity-7c70c.firebaseio.com")
-                .build();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
 
         Spot spot = getIntent().getParcelableExtra(FavorietsAdapter.ARG_Spot);
         if (spot != null) {
-
             mLatitude = spot.getLatitude();
             mLongitude = spot.getLongitude();
             mSpotId = spot.getSpotId();
@@ -88,51 +82,44 @@ public class DetailViewActivity extends AppCompatActivity {
                     .centerCrop()
                     //.placeholder(R.drawable.loading_spinner)
                     .into(imageView);
-
         }
 
         mDb = AppDatabase.getAppDatabase(getApplicationContext());
 
         getFavorites();
 
+        mFab.setOnClickListener(view -> {
+            if (isFavorite) {
+                AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDb.favoritesDao().deleteFavoritesEntry(mSpotId);
+                    }
+                });
+                isFavorite = false;
+                mFab.setImageResource(R.drawable.ic_bookmark_o);
+                Snackbar.make(view, "Removed from Favorites", Snackbar.LENGTH_LONG)
+                        .show();
+            } else {
 
-        mFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (isFavorite) {
-                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            mDb.favoritesDao().deleteFavoritesEntry(mSpotId);
-                        }
-                    });
-                    isFavorite = false;
-                    mFab.setImageResource(R.drawable.ic_bookmark_o);
-                    Snackbar.make(view, "Removed from Favorites", Snackbar.LENGTH_LONG)
-                            .show();
-
-                } else {
-
-                    final SpotEntry favoritesEntry = new SpotEntry(mSpotId, mUserId, mTitle, mCategory, mDescription, mImageUrl, mLatitude, mLongitude, true);
-                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            mDb.favoritesDao().insert(favoritesEntry);
-                        }
-                    });
-                    isFavorite = true;
-                    mFab.setImageResource(R.drawable.ic_bookmark);
-                    Snackbar.make(view, "Add to Favorites", Snackbar.LENGTH_LONG)
-                            .show();
-                }
-
+                final SpotEntry favoritesEntry = new SpotEntry(mSpotId, mUserId, mTitle, mCategory, mDescription, mImageUrl, mLatitude, mLongitude, true);
+                AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDb.favoritesDao().insert(favoritesEntry);
+                    }
+                });
+                isFavorite = true;
+                mFab.setImageResource(R.drawable.ic_bookmark);
+                Snackbar.make(view, "Add to Favorites", Snackbar.LENGTH_LONG)
+                        .show();
             }
         });
     }
 
+
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
@@ -165,8 +152,6 @@ public class DetailViewActivity extends AppCompatActivity {
                     public void run() {
                         if (!favoritesMovies.isEmpty()) {
                             isFavorite = false;
-                            //int resultsLength = favoritesMovies.size();
-                            // for (int i = 0; i < resultsLength; i++) {
                             for (SpotEntry favorites : favoritesMovies) {
                                 if (favorites.getSpotId().equals(mSpotId)) {
                                     isFavorite = true;

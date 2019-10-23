@@ -45,25 +45,15 @@ public class FavoritesFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        favorietsViewModel =
-                ViewModelProviders.of(this).get(FavoritesViewModel.class);
         View root = inflater.inflate(R.layout.fragment_favorites, container, false);
-        favorietsViewModel.getText().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                //textView.setText(s);
-            }
-        });
         ButterKnife.bind(this, root);
 
         favorietRecyclerView.setHasFixedSize(true);
         favorietRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
         getFavorites();
 
-
         if (savedInstanceState == null) {
-            //show snachbar
+
         } else {
             Parcelable[] parcelableSpots = savedInstanceState.getParcelableArray(FavorietsAdapter.ARG_Spot);
             if (parcelableSpots != null) {
@@ -74,7 +64,6 @@ public class FavoritesFragment extends Fragment {
                 favorietRecyclerView.setAdapter(new FavorietsAdapter(getContext(), spotCollection));
             }
         }
-
         return root;
     }
 

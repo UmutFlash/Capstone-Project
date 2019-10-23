@@ -14,13 +14,10 @@ public class AppWidget extends AppWidgetProvider {
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, Spot[] favorites,
                                 int appWidgetId) {
-
-
         String bodyText = "";
         for (Spot f : favorites) {
             bodyText += f.getTitle() + "\n";
             bodyText += f.getCategory() + "\n\n";
-
         }
 
         CharSequence widgetText = context.getString(R.string.appwidget_text);

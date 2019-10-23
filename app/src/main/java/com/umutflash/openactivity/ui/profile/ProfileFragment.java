@@ -34,32 +34,15 @@ public class ProfileFragment extends Fragment {
     Button logoutBtn;
 
     private FirebaseAuth firebaseAuth;
-    private DatabaseReference databaseReference;
-    private static final int REQUEST_CAPTURE_IMAGE = 100;
-
-    private ProfileViewModel profileViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
             ViewGroup container, Bundle savedInstanceState) {
-        profileViewModel =
-                ViewModelProviders.of(this).get(ProfileViewModel.class);
         View root = inflater.inflate(R.layout.fragment_profile, container, false);
-        //final TextView textView = root.findViewById(R.id.text_notifications);
-        profileViewModel.getText().observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-               // textView.setText(s);
-            }
-        });
-
         firebaseAuth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-
         FirebaseUser user = firebaseAuth.getCurrentUser();
         ButterKnife.bind(this, root);
-        //assert user != null;
+        assert user != null;
         userEmail.setText(user.getEmail());
-
         logoutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

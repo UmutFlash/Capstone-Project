@@ -1,7 +1,5 @@
 package com.umutflash.openactivity;
 
-
-
 import android.app.Application;
 
 import com.umutflash.openactivity.data.AppDatabase;
@@ -23,7 +21,6 @@ public class FavoritesViewModel extends AndroidViewModel {
 
         AppDatabase appDatabase = AppDatabase.getAppDatabase(this.getApplication());
         favoritesMovies = appDatabase.favoritesDao().loadAllFavoritesSpots();
-
     }
     public LiveData<List<SpotEntry>> getFavorites() {
         return favoritesMovies;

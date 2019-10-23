@@ -8,13 +8,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-
 import androidx.annotation.NonNull;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,14 +30,11 @@ public class RegisterActivity extends BaseActivity {
     Button registerBtn;
 
     private FirebaseAuth firebaseAuth;
-    private Snackbar erroSnackbar;
-    private Snackbar successSnackbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-
 
         firebaseAuth = FirebaseAuth.getInstance();
         ButterKnife.bind(this);

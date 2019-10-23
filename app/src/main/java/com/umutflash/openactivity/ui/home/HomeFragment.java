@@ -10,22 +10,9 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -56,8 +43,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
+    public static final int ZOOM_FACTOR = 11;
+    public static final int FASTEST_INTERVAL = 1000;
     @BindView(R.id.fab)
     FloatingActionButton fabBtn;
 
@@ -87,7 +86,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private HomeViewModel homeViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
-            ViewGroup container, Bundle savedInstanceState) {
+                             ViewGroup container, Bundle savedInstanceState) {
         homeViewModel =
                 ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
@@ -116,28 +115,27 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getContext(), AddSpotActivity.class);
-                intent.putExtra("latitude", mLocation.getLatitude());
-                intent.putExtra("longitude", mLocation.getLongitude());
+                intent.putExtra(ARG_LATITUDE, mLocation.getLatitude());
+                intent.putExtra(ARG_LONITUDE, mLocation.getLongitude());
                 startActivity(intent);
             }
         });
         return root;
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
-
+        
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1000);
-        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setInterval(FASTEST_INTERVAL);
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(ZOOM_FACTOR));
 
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-
-
+        
         fetchSpots();
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -241,8 +239,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 if (getContext() != null) {
                     mLocation = location;
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    if(!startFlag){
-                       mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                    if (!startFlag) {
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                         startFlag = true;
                     }
                 }

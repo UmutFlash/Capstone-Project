@@ -1,34 +1,23 @@
 package com.umutflash.openactivity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import androidx.annotation.NonNull;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class LoginActivity extends BaseActivity {
-
-    private TextView mTextMessage;
 
     @BindView(R.id.email)
     EditText emailEditeText;
@@ -43,7 +32,6 @@ public class LoginActivity extends BaseActivity {
 
     private FirebaseAuth firebaseAuth;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,26 +40,18 @@ public class LoginActivity extends BaseActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         ButterKnife.bind(this);
 
-        loginBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loading.setVisibility(View.VISIBLE);
-                loginUser();
-
-            }
+        loginBtn.setOnClickListener(v -> {
+            loading.setVisibility(View.VISIBLE);
+            loginUser();
         });
 
-        register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(getApplicationContext(), RegisterActivity.class));
-            }
-        });
+        register.setOnClickListener(v -> startActivity(new Intent(getApplicationContext(), RegisterActivity.class)));
     }
+
 
     private void loginUser() {
         closeKeyboard();
-        if(isNetworkAvailable()){
+        if (isNetworkAvailable()) {
 
             String email = emailEditeText.getText().toString().trim();
             String password = passwordEditeText.getText().toString().trim();
@@ -102,9 +82,14 @@ public class LoginActivity extends BaseActivity {
                             }
                         }
                     });
-        }else{
+        } else {
             showError(getString(R.string.no_network));
             loading.setVisibility(View.GONE);
         }
     }
 }
+
+
+
+
+

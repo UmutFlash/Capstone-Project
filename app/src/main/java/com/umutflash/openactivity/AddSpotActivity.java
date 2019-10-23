@@ -23,8 +23,6 @@ import android.widget.ProgressBar;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -32,8 +30,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
@@ -54,6 +52,11 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AddSpotActivity extends AppCompatActivity {
 
@@ -69,6 +72,8 @@ public class AddSpotActivity extends AppCompatActivity {
     Button uploadBtn;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
 
     private double mLatitude;
     private double mLongitude;
@@ -79,8 +84,9 @@ public class AddSpotActivity extends AppCompatActivity {
 
     private StorageReference mStorageReference;
     private DatabaseReference mDatabaseReference;
-    private FirebaseAuth firebaseAuth;
     private FirebaseUser mUser;
+
+    private FirebaseFirestore dbFireStore = FirebaseFirestore.getInstance();
 
 
     @Override
@@ -93,15 +99,14 @@ public class AddSpotActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setTitle("Home");
-        getSupportActionBar().setSubtitle("sairam");
+        getSupportActionBar().setTitle("Add Spot");
         if (extras != null) {
             mLatitude = extras.getDouble("latitude");
             mLongitude = extras.getDouble("longitude");
 
         }
 
-        firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
         mUser = firebaseAuth.getCurrentUser();
 
@@ -113,8 +118,6 @@ public class AddSpotActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         }
 
-
-        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -131,38 +134,65 @@ public class AddSpotActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-            default:
-                return super.onContextItemSelected(item);
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
         }
+        return super.onContextItemSelected(item);
     }
-
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
     }
 
+    void getRetrofitImage(Spot spot) {
+
+        View contextView = findViewById(android.R.id.content);
+
+        String url = "https://openactivity-7c70c.firebaseio.com";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        SpotAPI service = retrofit.create(SpotAPI.class);
+
+
+
+
+        Call<Spot> call = service.setData("spots", spot);
+
+        call.enqueue(new Callback<Spot>() {
+            @Override
+            public void onResponse(Call<Spot> call, Response<Spot> response) {
+                Snackbar.make(contextView, "Upload Data successful", Snackbar.LENGTH_LONG)
+                        .show();
+            }
+
+            @Override
+            public void onFailure(Call<Spot> call, Throwable t) {
+                Snackbar.make(contextView, "FEHLER", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
+    }
+
     private void uploadFile() {
         View contextView = findViewById(android.R.id.content);
         if (imageFilePath != null) {
+
             StorageReference fileReference = mStorageReference.child(System.currentTimeMillis() + ".jpeg");
-
-
             StorageTask<UploadTask.TaskSnapshot> uploadTask = fileReference.putFile(imageFilePath);
-
             Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                 @Override
                 public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                     if (!task.isSuccessful()) {
                         throw task.getException();
                     }
-
-                    // Continue with the task to get the download URL
                     return fileReference.getDownloadUrl();
                 }
             }).addOnCompleteListener(new OnCompleteListener<Uri>() {
@@ -171,7 +201,6 @@ public class AddSpotActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         Uri downloadUri = task.getResult();
                         String downloadURL = downloadUri.toString();
-
                         Handler handler = new Handler();
                         handler.postDelayed(new Runnable() {
                             @Override
@@ -193,107 +222,16 @@ public class AddSpotActivity extends AppCompatActivity {
                                 mLatitude,
                                 mLongitude);
 
+                        getRetrofitImage(spot);
 
-                        mDatabaseReference.child(spotId).setValue(spot)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Snackbar.make(contextView, "Upload Data successful", Snackbar.LENGTH_LONG)
-                                                .show();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Snackbar.make(contextView, e.getMessage(), Snackbar.LENGTH_LONG)
-                                                .setAction("Action", null).show();
-
-                                    }
-                                });
                     } else {
-                        Snackbar.make(contextView, "FEHLER", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+                        Snackbar.make(contextView, "Upload error", Snackbar.LENGTH_LONG).show();
                     }
                 }
             });
-
-            /*
-            fileReference.putFile(imageFilePath)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    progressBar.setProgress(0);
-                                }
-                            }, 5000);
-
-                            Snackbar.make(contextView, "Upload Image successful", Snackbar.LENGTH_LONG)
-                                    .show();
-
-                            String spotId = mDatabaseReference.push().getKey();
-                            Spot spot = new Spot(spotId,
-                                    mUser.getUid(),
-                                    titleEditeText.getText().toString().trim(),
-                                    categoryEditeText.getText().toString().trim(),
-                                    descriptionEditeText.getText().toString().trim(),
-                                    taskSnapshot.getUploadSessionUri().toString(),
-                                    mLatitude,
-                                    mLongitude);
-
-
-                            mDatabaseReference.child(spotId).setValue(spot)
-                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            Snackbar.make(contextView, "Upload Data successful", Snackbar.LENGTH_LONG)
-                                                    .show();
-                                        }
-                                    })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Snackbar.make(contextView, e.getMessage(), Snackbar.LENGTH_LONG)
-                                                    .setAction("Action", null).show();
-
-                                        }
-                                    });
-
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Snackbar.make(contextView, e.getMessage(), Snackbar.LENGTH_LONG)
-                                    .setAction("Action", null).show();
-
-                        }
-                    })
-                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
-
-                            double progress = (100 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                            progressBar.setProgress((int) progress);
-
-                        }
-                    });
-                    */
-
-
         } else {
-            Snackbar.make(contextView, "Not file selected", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            Snackbar.make(contextView, "Not file selected", Snackbar.LENGTH_LONG).show();
         }
-    }
-
-    private String getFileExtensions(Uri uri) {
-        ContentResolver cr = getContentResolver();
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        return mime.getExtensionFromMimeType(cr.getType(uri));
-
     }
 
     private void captureFromCamera() {
@@ -305,47 +243,6 @@ public class AddSpotActivity extends AppCompatActivity {
             ex.printStackTrace();
         }
     }
-
-
-    private void takePictureIntent() {
-
-        Intent pictureIntent = new Intent(
-                MediaStore.ACTION_IMAGE_CAPTURE
-        );
-        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
-            //Create a file to store the image
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-
-            }
-            if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this, "com.umutflash.openactivity.fileprovider", photoFile);
-                pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                        photoURI);
-                startActivityForResult(pictureIntent,
-                        REQUEST_CAPTURE_IMAGE);
-            }
-        }
-
-    }
-
-    private void pickPictureIntent() {
-
-        //Create an Intent with action as ACTION_PICK
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        // Sets the type as image/*. This ensures only components of type image are selected
-        intent.setType("image/*");
-        //We pass an extra array with the accepted mime types. This will ensure only components with these MIME types as targeted.
-        String[] mimeTypes = {"image/jpeg", "image/png"};
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-        // Launching the Intent
-
-        startActivityForResult(intent, REQUEST_PICK_IMAGE);
-    }
-
 
     private File createImageFile() throws IOException {
         String timeStamp =
@@ -395,29 +292,4 @@ public class AddSpotActivity extends AppCompatActivity {
                     break;
             }
     }
-
-
-    public void uploadImage(Bitmap bitmap) {
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("pics/${FirebaseAuth.getInstance().getCurrentUser().getUid()}");
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-
-        byte[] image = outputStream.toByteArray();
-        UploadTask upload = storageRef.putBytes(image);
-        upload.addOnCompleteListener(this, new OnCompleteListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-
-
-            }
-        });
-    }
-
-
-    private void upload() {
-
-
-    }
-
 }

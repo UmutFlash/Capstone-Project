@@ -14,7 +14,6 @@ import com.umutflash.openactivity.DetailViewActivity;
 import com.umutflash.openactivity.R;
 import com.umutflash.openactivity.data.model.Spot;
 
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;

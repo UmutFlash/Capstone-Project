@@ -11,5 +11,7 @@
     <color name="theme_icons">#FFFFFF</color>
     <color name="theme_divider">#BDBDBD</color>
     <color name="colorErrort">#BE0D4D</color>
+    <color name="white_bg">#FFFFFF</color>
+    <color name="light_gray">#8fff</color>
 </resources>
 

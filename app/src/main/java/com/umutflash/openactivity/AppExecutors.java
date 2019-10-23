@@ -22,7 +22,7 @@ public class AppExecutors {
         this.mainThread = mainThread;
     }
 
-    public static AppExecutors getInstance() {
+    static AppExecutors getInstance() {
         if (sInstance == null) {
             synchronized (LOCK) {
                 sInstance = new AppExecutors(Executors.newSingleThreadExecutor(),
@@ -33,7 +33,7 @@ public class AppExecutors {
         return sInstance;
     }
 
-    public Executor diskIO() {
+    Executor diskIO() {
         return diskIO;
     }
 
