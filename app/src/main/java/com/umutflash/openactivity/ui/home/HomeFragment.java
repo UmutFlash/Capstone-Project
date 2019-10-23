@@ -70,7 +70,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private List<SpotEntry> favoriets;
     private LatLng pickupLocation;
     private Map<Marker, Map<String, Object>> markers;
-    private Map<String, Object> dataModel;
 
 
     private static final String ARG_SPOT_ID = "spotId";
@@ -109,8 +108,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         markers = new HashMap<>();
-        dataModel = new HashMap<>();
-
+       
         fabBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -173,6 +171,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                     SpotEntry spot = postSnapshot.getValue(SpotEntry.class);
+                    Map<String, Object> dataModel = new HashMap<>();
                     dataModel.put(ARG_SPOT_ID, spot.getSpotId());
                     dataModel.put(ARG_DESCRIPTION, spot.getDescription());
                     dataModel.put(ARG_TITLE, spot.getTitle());
