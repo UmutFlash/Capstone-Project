@@ -33,7 +33,7 @@ public class MainActivity extends BaseActivity {
         }
 
 
-        MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713");
+        MobileAds.initialize(this, "ca-app-pub-9594993645951959~2124552964");
         AdView mAdView = (AdView) findViewById(R.id.adView);
 
         AdRequest adRequest = new AdRequest.Builder()
