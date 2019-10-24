@@ -87,6 +87,9 @@ public class LoginActivity extends BaseActivity {
             loading.setVisibility(View.GONE);
         }
     }
+
+    @Override
+    public void onBackPressed() { }
 }
 
 

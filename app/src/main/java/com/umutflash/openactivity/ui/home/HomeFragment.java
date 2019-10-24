@@ -50,6 +50,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -72,13 +73,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private Map<Marker, Map<String, Object>> markers;
 
 
-    private static final String ARG_SPOT_ID = "spotId";
-    private static final String ARG_TITLE = "title";
-    private static final String ARG_CATEGORY = "category";
-    private static final String ARG_DESCRIPTION = "description";
-    private static final String ARG_IMAGE_URL = "imageUrl";
-    private static final String ARG_LATITUDE = "latitude";
-    private static final String ARG_LONITUDE = "longitude";
+    public static final String ARG_SPOT_ID = "spotId";
+    public static final String ARG_TITLE = "title";
+    public static final String ARG_CATEGORY = "category";
+    public static final String ARG_DESCRIPTION = "description";
+    public static final String ARG_IMAGE_URL = "imageUrl";
+    public static final String ARG_LATITUDE = "latitude";
+    public static final String ARG_LONITUDE = "longitude";
 
     private Boolean startFlag = false;
 
@@ -99,16 +100,16 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
 
         if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            ButterKnife.bind(this, root);
+            mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+            markers = new HashMap<>();
         } else {
             checkLocationPermission();
         }
 
-        ButterKnife.bind(this, root);
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-        markers = new HashMap<>();
-       
+
         fabBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,7 +124,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        
+
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
         mLocationRequest = new LocationRequest();
@@ -133,7 +134,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mMap.animateCamera(CameraUpdateFactory.zoomTo(ZOOM_FACTOR));
 
         mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-        
+
         fetchSpots();
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
