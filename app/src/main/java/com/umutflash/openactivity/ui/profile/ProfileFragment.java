@@ -1,6 +1,9 @@
 package com.umutflash.openactivity.ui.profile;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +21,7 @@ import androidx.lifecycle.ViewModelProviders;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -46,19 +50,28 @@ public class ProfileFragment extends Fragment {
         logoutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                firebaseAuth.signOut();
-                startActivity(new Intent(getContext(), MainActivity.class));
-
+                if(isNetworkAvailable()) {
+                    firebaseAuth.signOut();
+                    startActivity(new Intent(getContext(), MainActivity.class));
+                }else{
+                    showError(getString(R.string.no_network));
+                }
             }
         });
-
         return root;
     }
 
+    void showError(String errorMessage){
+        Snackbar.make(getActivity().findViewById(android.R.id.content), errorMessage, Snackbar.LENGTH_LONG)
+                .show();
+    }
 
+    private boolean isNetworkAvailable() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
 
-
-
-
-
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
 }
+

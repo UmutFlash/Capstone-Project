@@ -2,8 +2,11 @@ package com.umutflash.openactivity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -127,9 +130,21 @@ public class AddSpotActivity extends AppCompatActivity {
         mUploadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                uploadFile();
+                if(isNetworkAvailable()){
+                    uploadFile();
+                }else{
+                    showError(getString(R.string.no_network));
+                }
+
             }
         });
+
+    }
+
+    void showError(String errorMessage){
+        View contextView = findViewById(android.R.id.content);
+        Snackbar.make(contextView, errorMessage, Snackbar.LENGTH_LONG)
+                .show();
     }
 
     @Override
@@ -335,5 +350,13 @@ public class AddSpotActivity extends AppCompatActivity {
                     mImageView.setImageURI(mImageFilePath);
                     break;
             }
+    }
+
+    protected boolean isNetworkAvailable() {
+        ConnectivityManager cm =
+                (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }
