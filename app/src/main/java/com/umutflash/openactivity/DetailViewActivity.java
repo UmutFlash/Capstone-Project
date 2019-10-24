@@ -80,7 +80,6 @@ public class DetailViewActivity extends AppCompatActivity {
             Glide.with(this)
                     .load(mImageUrl)
                     .centerCrop()
-                    //.placeholder(R.drawable.loading_spinner)
                     .into(imageView);
         }
 

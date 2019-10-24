@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 import com.umutflash.openactivity.DetailViewActivity;
 import com.umutflash.openactivity.R;
 import com.umutflash.openactivity.data.model.Spot;
@@ -21,14 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 public class FavorietsAdapter extends RecyclerView.Adapter<FavorietsAdapter.ViewHolder> {
 
     private LayoutInflater mInflater;
-    private Context mContext;
     private Spot[] mSpotsList;
 
     public static final String ARG_Spot = "spot";
 
-    public FavorietsAdapter(Context context, Spot [] spots) {
+    public FavorietsAdapter(Context context, Spot[] spots) {
         this.mInflater = LayoutInflater.from(context);
-        mContext = context;
         mSpotsList = spots;
     }
 
@@ -46,8 +44,9 @@ public class FavorietsAdapter extends RecyclerView.Adapter<FavorietsAdapter.View
         holder.mTitle.setText(spotCurrent.getTitle());
         holder.mCategory.setText(spotCurrent.getCategory());
         Uri imageFilePath = Uri.parse(spotCurrent.getImageUrl());
-        Picasso.get()
+        Glide.with(holder.mView)
                 .load(imageFilePath)
+                .centerCrop()
                 .into(holder.mImageView);
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
