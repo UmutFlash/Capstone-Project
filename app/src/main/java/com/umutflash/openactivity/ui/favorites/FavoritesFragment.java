@@ -38,10 +38,6 @@ public class FavoritesFragment extends Fragment {
     @BindView(R.id.no_favorites_layout)
     LinearLayout mNoFavoritesLayout;
 
-    private FavorietsAdapter mAdapter;
-    private DatabaseReference mDataRef;
-    private List<SpotEntry> favoriets;
-
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {

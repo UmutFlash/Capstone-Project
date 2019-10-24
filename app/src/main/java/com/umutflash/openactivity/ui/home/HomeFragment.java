@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -61,6 +62,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     @BindView(R.id.fab)
     FloatingActionButton fabBtn;
 
+    private SupportMapFragment mapFragment;
+
     private GoogleMap mMap;
 
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -68,7 +71,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private LocationRequest mLocationRequest;
 
     private DatabaseReference mDataRef;
-    private List<SpotEntry> favoriets;
     private LatLng pickupLocation;
     private Map<Marker, Map<String, Object>> markers;
 
@@ -82,6 +84,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     public static final String ARG_LONITUDE = "longitude";
 
     private Boolean startFlag = false;
+    private Boolean permissionFlag = false;
 
     private HomeViewModel homeViewModel;
 
@@ -91,32 +94,32 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         final TextView textView = root.findViewById(R.id.text_home);
-
+        mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         homeViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
-
+        ButterKnife.bind(this, root);
         if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            ButterKnife.bind(this, root);
-            mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
-            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this);
-            markers = new HashMap<>();
+            permissionFlag=true;
         } else {
             checkLocationPermission();
         }
-
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        mapFragment.getMapAsync(this);
+        markers = new HashMap<>();
 
         fabBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getContext(), AddSpotActivity.class);
-                intent.putExtra(ARG_LATITUDE, mLocation.getLatitude());
-                intent.putExtra(ARG_LONITUDE, mLocation.getLongitude());
-                startActivity(intent);
+                if (mLocation != null) {
+                    Intent intent = new Intent(getContext(), AddSpotActivity.class);
+                    intent.putExtra(ARG_LATITUDE, mLocation.getLatitude());
+                    intent.putExtra(ARG_LONITUDE, mLocation.getLongitude());
+                    startActivity(intent);
+                }
             }
         });
         return root;
@@ -124,16 +127,18 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
         mMap = googleMap;
-        mMap.setMyLocationEnabled(true);
+
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(FASTEST_INTERVAL);
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mMap.animateCamera(CameraUpdateFactory.zoomTo(ZOOM_FACTOR));
 
-        mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
+        if(permissionFlag){
+            mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
+            mMap.setMyLocationEnabled(true);
+        }
 
         fetchSpots();
 
@@ -164,9 +169,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void fetchSpots() {
-        favoriets = new ArrayList<>();
-        mDataRef = FirebaseDatabase.getInstance().getReference("spots");
-
+        mDataRef = FirebaseDatabase.getInstance().getReference(AddSpotActivity.REF_FIREBASE);
         mDataRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -197,25 +200,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-                new android.app.AlertDialog.Builder(getContext())
-                        .setTitle("give permission")
-                        .setMessage("give permission message")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-                            }
-                        })
-                        .create()
-                        .show();
+                Snackbar.make(getActivity().findViewById(android.R.id.content),
+                        getString(R.string.grant_permissions_show_Spot),
+                        Snackbar.LENGTH_INDEFINITE).setAction(getString(R.string.enable) ,
+                        v -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                1)).show();
             } else {
-                ActivityCompat.requestPermissions(getActivity(), new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             }
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1: {
@@ -225,7 +223,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                         mMap.setMyLocationEnabled(true);
                     }
                 } else {
-                    Toast.makeText(getContext(), "Please provide the permission", Toast.LENGTH_LONG).show();
+                    Snackbar.make(getActivity().findViewById(android.R.id.content),
+                            getString(R.string.grant_permissions_show_Spot),
+                            Snackbar.LENGTH_INDEFINITE).setAction(getString(R.string.enable) ,
+                            v -> requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                    1)).show();
                 }
                 break;
             }

@@ -27,7 +27,18 @@
 
     <string name="banner_ad_unit_id">ca-app-pub-3940256099942544~3347511713</string>
     <string name="upload">Upload</string>
-    <string name="write_your_description">Write your description..</string>
+    <string name="write_your_description">Write your description.</string>
     <string name="title">Title</string>
     <string name="category">Category</string>
+    <string name="please_give_title">Give permission.</string>
+    <string name="please_give_permissions">Please give the requested permission.</string>
+    <string name="provide_permissions">Please provide the permission.</string>
+    <string name="grant_permissions_upload_Spot">Please Grant Permissions to upload spot.</string>
+    <string name="grant_permissions_show_Spot">Please Grant Permissions to show spots and your loaction.</string>
+    <string name="enable">ENABLE</string>
+    <string name="upload_successful">Upload Data successful</string>
+    <string name="upload_image_successful">Upload Image successful</string>
+    <string name="upload_error">Upload error</string>
+    <string name="all_fields_error">Please fill in all fields and add a picture.</string>
+
 </resources>
