@@ -55,12 +55,12 @@ public class RegisterActivity extends BaseActivity {
             String password = passwordEditeText.getText().toString().trim();
 
             if (TextUtils.isEmpty(email)) {
-                Toast.makeText(this, "Please enter email", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.please_enter_email), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (TextUtils.isEmpty(password)) {
-                Toast.makeText(this, "Please enter passwort", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.please_enter_passwort), Toast.LENGTH_SHORT).show();
                 return;
             }
 

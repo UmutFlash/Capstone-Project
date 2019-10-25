@@ -40,5 +40,7 @@
     <string name="upload_image_successful">Upload Image successful</string>
     <string name="upload_error">Upload error</string>
     <string name="all_fields_error">Please fill in all fields and add a picture.</string>
+    <string name="please_enter_email">Please enter email</string>
+    <string name="please_enter_passwort">Please enter passwort</string>
 
 </resources>
